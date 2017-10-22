@@ -1,0 +1,16 @@
+{
+  "name": "nebulosus-node",
+  "version": "0.0.1",
+  "description": "Nebulsosus is a distrubted key-value store",
+  "main": "client.js",
+  "dependencies": {
+    "crc": "^3.5.0",
+    "sockjs-client": "^1.1.4"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
