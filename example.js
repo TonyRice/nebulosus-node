@@ -26,18 +26,11 @@ client.connect(function(err, client){
         console.log("Stored " + keysWritten + " keys.");
 
         let key = UUID();
-        // When using a callback we ensure that the
-        // key was stored so we can retrieve it right
-        // away if we need to.
 
-        // Everything is persisted to the filesystem
-        // and in memory and to other nodes. This is
-        // currently utilizing a single node.
+        // This callback is actually triggered by
+        // a response from the server.
         client.put(key, UUID(), function(err){
-            // This callback is actually triggered by
-            // a response from the server.
             keysWritten += 1;
-            //console.log( "total keys = " + keysWritten);
             doSomething();
         });
     }
