@@ -67,13 +67,23 @@ var NebulosusClient = function(url){
                     }
                 } else if(cmd === 13){
                     var dataLen = data.readUInt16BE(3);
-                    var cbData = data.toString('utf-8', 5, dataLen + 6);
-                    var cbLen = data.readUInt16BE(dataLen + 7);
-                    var cbId = data.toString('utf-8', dataLen + 9, cbLen + dataLen + 9);
-                    if(callbackMap.hasOwnProperty(cbId)){
-                        var callback = callbackMap[cbId];
-                        try {callback(undefined, cbData);} catch (ignored){}
-                        delete callbackMap[cbId];
+                    if(data.length > dataLen + 6){
+                        var cbData = data.toString('utf-8', 5, dataLen + 6);
+                        var cbLen = data.readUInt16BE(dataLen + 7);
+                        var cbId = data.toString('utf-8', dataLen + 9, cbLen + dataLen + 9);
+                        if(callbackMap.hasOwnProperty(cbId)){
+                            var callback = callbackMap[cbId];
+                            try {callback(undefined, cbData);} catch (ignored){}
+                            delete callbackMap[cbId];
+                        }
+                    } else {
+                        // This is a callback with a null value.
+                        var cbId = data.toString('utf-8', 5, dataLen + 6);
+                        if(callbackMap.hasOwnProperty(cbId)){
+                            var callback = callbackMap[cbId];
+                            try {callback(undefined, null);} catch (ignored){}
+                            delete callbackMap[cbId];
+                        }
                     }
                 }
             });
@@ -146,8 +156,68 @@ var NebulosusClient = function(url){
         var typeOf = (typeof data);
         if(typeOf === 'string'){
             return 97;
+        } else if(typeOf === 'object'){
+            return 95;
         }
     }
+
+    this.remove = function(key, cb){
+        checkConnected(cb);
+
+        var msgUUID = UUID(),
+            uuidLen = msgUUID.length;
+
+        // If there's no callback we do not need a response.
+
+        // WE KNOW the server will receive the data as long as there is a connection.
+
+        var keyTypeOf = getDataType(key);
+
+        var bufSize = 3;
+
+        var keyIsStr = (keyTypeOf === 97);
+
+        if(keyIsStr){
+            bufSize += key.toString().length + 4; // always include 4 extra bytes to include the size.
+        }
+
+        // We need this for the callback.
+        if(cb){
+            bufSize += uuidLen + 4;
+        }
+
+        // TODO setup other values
+
+        // Let's build the handshake
+        var cmd = Buffer.alloc(bufSize);
+        var pos = cmd.writeInt8(81, 0);
+        pos = cmd.writeInt8(keyTypeOf, pos);
+
+        if(keyIsStr){
+            var kStr = key.toString();
+            var kSize = kStr.length;
+            pos = cmd.writeUInt32BE(kSize, pos);
+            pos += cmd.write(kStr, pos);
+        }
+
+        // Let's setup the callback
+        if(cb){
+            pos = cmd.writeUInt32BE(uuidLen, pos);
+            pos += cmd.write(msgUUID.toString(), pos);
+
+            callbackMap[msgUUID] = cb;
+
+
+            // After about 5 seconds we timeout
+            setTimeout(function(){
+                if(callbackMap.hasOwnProperty(msgUUID)){
+                    cb(new Error("Timeout occurred!"));
+                }
+            }, 5000);
+        }
+
+        sock.send(cmd);
+    };
 
     this.put = function(key, value, cb){
         checkConnected(cb);
