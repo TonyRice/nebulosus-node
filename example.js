@@ -6,7 +6,6 @@ var client = new NebulosusClient('http://localhost:6175/nebulosus.sock');
 //var client = new NebulosusClient('http://localhost:6174/nebulosus.sock');
 
 client.connect(function(err, client){
-
     // Put Remove Get Test
     client.put("hello", "world", function(err){
         client.get("hello", function(err, value){
@@ -20,11 +19,9 @@ client.connect(function(err, client){
         });
     });
 
-    var keysWritten = 0;
+    let keysWritten = 0;
     function doSomething(){
-
         console.log("Stored " + keysWritten + " keys.");
-
         let key = UUID();
 
         // This callback is actually triggered by

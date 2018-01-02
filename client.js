@@ -14,13 +14,13 @@ var NebulosusClient = function(url){
     // request. This is not for security but more for
     // the client to be able to handle response accordingly.
 
-    var connected = false,
+    let connected = false,
         handshakeSent = false,
         handshakeFinished = false;
 
-    var sock = null;
+    let sock = null;
 
-    var callbackMap = {};
+    const callbackMap = {};
 
     function initializeSock(connectCB){
 
@@ -31,7 +31,7 @@ var NebulosusClient = function(url){
         };
 
         sock.onmessage = function(e) {
-            var data = new Buffer(e.data);
+            const data = new Buffer(e.data);
 
             if(handshakeSent === false){
                 connectCB(new Error("Protocol Error: Data has been received without handshake first."));
@@ -53,7 +53,7 @@ var NebulosusClient = function(url){
 
 
             setImmediate(function(){
-                var cmd = data.readInt8(0);
+                const cmd = data.readInt8(0);
 
                 // This means we are trigger a success callback
                 if(cmd === 12){
@@ -105,13 +105,13 @@ var NebulosusClient = function(url){
             throw "Cannot send handshake when the client is not connected!";
         }
 
-        var uuidLen = clientUUID.length;
-        var crcStr = uuidCRC.toString();
-        var crcLen = crcStr.length;
+        const uuidLen = clientUUID.length;
+        const crcStr = uuidCRC.toString();
+        const crcLen = crcStr.length;
 
         // Let's build the handshake
-        var cmd = Buffer.alloc(uuidLen + crcLen + 3);
-        var pos = cmd.writeInt8(64, 0);
+        const cmd = Buffer.alloc(uuidLen + crcLen + 3);
+        let pos = cmd.writeInt8(64, 0);
         pos = cmd.writeInt8(uuidLen, pos);
         pos += cmd.write(clientUUID, pos);
         pos = cmd.writeInt8(crcLen, pos);
@@ -135,7 +135,7 @@ var NebulosusClient = function(url){
         }
     }
 
-    var self = this;
+    const self = this;
 
     this.connect = function(cb){
         if(connected === true && handshakeSent === true){
